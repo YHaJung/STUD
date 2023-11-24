@@ -1,3 +1,8 @@
+
+# Caution
+- This is not a official code.
+- If you want to see the official code of STUD, see [here](https://github.com/deeplearning-wisc/stud)
+
 # STUD
 
 This is the source code accompanying the paper ***Unknown-Aware Object Detection:Learning What You Don’t Know from Videos in the Wild*** [paper](https://arxiv.org/abs/2203.03800) by Xuefeng Du, Xin Wang, Gabriel Gozum and Yixuan Li 
@@ -16,26 +21,25 @@ Checkout our
 
 ### Environment
 - CUDA 10.2
-- Python >= 3.7
-- Pytorch >= 1.6
+- Python 3.8
+- Pytorch 1.9
 - THe Detectron2 version matches Pytorch and CUDA versions.
 
 ### Dependencies
 
 1. Create a virtual env.
-- `python3 -m pip install --user virtualenv`
-- `python3 -m venv stud`
-- `source stud/bin/activate`
+- `conda create -n stud python=3.8 pip`
+- `conda activate stud`
 
 2. Install dependencies.
 
-- `pip install -r requirements.txt`
-
 - Install Pytorch 1.9
 
-`pip3 install torch torchvision`
+  `conda install pytorch==1.9.0 torchvision==0.10.0 torchaudio==0.9.0 cudatoolkit=10.2 -c pytorch`
+  Check out the previous Pytorch versions [here](https://pytorch.org/get-started/previous-versions/).
+- `pip install -r requirements.txt`
+- `pip install setuptools==59.5.0`
 
-Check out the previous Pytorch versions [here](https://pytorch.org/get-started/previous-versions/).
 
 - Install Detectron2
 Build Detectron2 from Source (gcc & g++ >= 5.4)

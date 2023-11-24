@@ -1,0 +1,1 @@
+python -m tools.train_net --config-file ./configs/BDD100k/stud_resnet.yaml --num-gpus 1
