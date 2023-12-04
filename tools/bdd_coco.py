@@ -31,8 +31,8 @@ to_np = lambda x: x.data.cpu().numpy()
 
 
 # ID data
-ood_data = np.load('/nobackup-slow/dataset/my_xfdu/video/bdd/bdd100k/checkpoints/bdd_tracking_2k/daytime/' + str(args.model) + '/ood.npy',allow_pickle=True)
-id_data = np.load('/nobackup-slow/dataset/my_xfdu/video/bdd/bdd100k/checkpoints/bdd_tracking_2k/daytime/' + str(args.model) + '/id.npy',allow_pickle=True)
+ood_data = np.load('./' + str(args.model) + '/ood.npy',allow_pickle=True)
+id_data = np.load('./' + str(args.model) + '/id.npy',allow_pickle=True)
 # id_data = pickle.load(open('./data/VOC-Detection/' + args.model + '/'+args.name+'/random_seed'+'_' +str(args.seed)  +'/inference/voc_custom_val/standard_nms/corruption_level_0/probabilistic_scoring_res_odd_'+str(args.thres)+'.pkl', 'rb'))
 # ood_data = pickle.load(open('./data/VOC-Detection/' + args.model + '/'+args.name+'/random_seed' +'_'+str(args.seed)  +'/inference/coco_ood_val/standard_nms/corruption_level_0/probabilistic_scoring_res_odd_'+str(args.thres)+'.pkl', 'rb'))
 # id_score = []
@@ -66,27 +66,27 @@ T = 1
 
 
 
-assert len(id_data[0]) == 11
+# assert len(id_data[0]) == 11
 if args.energy:
-    id_score = -args.T * torch.logsumexp(id_data[:, :-1] / args.T, dim=1).cpu().data.numpy()
+    # id_score = -args.T * torch.logsumexp(id_data[:, :-1] / args.T, dim=1).cpu().data.numpy()
     ood_score = -args.T * torch.logsumexp(ood_data[:, :-1] / args.T, dim=1).cpu().data.numpy()
 else:
-    id_score = -np.max(F.softmax(id_data[:, :-1], dim=1).cpu().data.numpy(), axis=1)
+    # id_score = -np.max(F.softmax(id_data[:, :-1], dim=1).cpu().data.numpy(), axis=1)
     ood_score = -np.max(F.softmax(ood_data[:, :-1], dim=1).cpu().data.numpy(), axis=1)
 # breakpoint()
 # id_score = id_data
 # ood_score = ood_data
 ###########
 ########
-print(len(id_score))
-print(len(ood_score))
+# print(len(id_score))
+# print(len(ood_score))
 
-measures = get_measures(-id_score, -ood_score, plot=False)
+# measures = get_measures(-id_score, -ood_score, plot=False)
 
-if args.energy:
-    print_measures(measures[0], measures[1], measures[2], 'energy')
-else:
-    print_measures(measures[0], measures[1], measures[2], 'msp')
+# if args.energy:
+#     print_measures(measures[0], measures[1], measures[2], 'energy')
+# else:
+#     print_measures(measures[0], measures[1], measures[2], 'msp')
 
 
 

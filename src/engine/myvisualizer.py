@@ -53,6 +53,7 @@ class MyVisualizer(Visualizer):
             covariance_matrices=None,
             labels=None,
             scores=None,
+            ood_scores=None,
             assigned_colors=None,
             alpha=0.5,
             score_threshold=0.3
@@ -92,7 +93,7 @@ class MyVisualizer(Visualizer):
                     maximum=1) for _ in range(num_instances)]
 
         if num_instances == 0:
-            return self.output
+            return self.output, []
 
         # Display in largest to smallest order to reduce occlusion.
         areas = None
@@ -108,6 +109,7 @@ class MyVisualizer(Visualizer):
             assigned_colors = [assigned_colors[idx] for idx in sorted_idxs]
             scores = [scores[k] for k in sorted_idxs] if scores is not None else None
 
+        reformed_boxes = []
         for i in range(num_instances):
             # color = np.array([0., 1., 0.], dtype=np.float32) if 'OOD' in labels[i] else np.array([1., 0., 0],
             #                                                                                      dtype=np.float32)
@@ -171,8 +173,16 @@ class MyVisualizer(Visualizer):
                     horizontal_alignment=horiz_align,
                     font_size=font_size,
                 )
+            reformed_boxes.append({
+                "label": 0 if labels[i][:3] == 'OOD' else 1,
+				"xtl": float(boxes[i][0]),
+				"ytl": float(boxes[i][1]),
+				"xbr": float(boxes[i][2]),
+				"ybr": float(boxes[i][3]),
+				"ood_score": float(ood_scores[i])
+            })
 
-        return self.output
+        return self.output, reformed_boxes
 
     def draw_box(self, box_coord, alpha=0.5, edge_color="g", line_style="-"):
         """

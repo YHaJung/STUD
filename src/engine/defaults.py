@@ -566,8 +566,8 @@ Alternatively, you can call evaluation functions yourself (see Colab balloon tut
             # breakpoint()
             results_i = inference_on_dataset(model, data_loader, evaluator, saved_address,
                                              visualize, savefigdir, cfg)
-            if 'ood' in saved_address:
-                return None
+            # if 'ood' in saved_address:
+            return None
             results[dataset_name] = results_i
             if comm.is_main_process():
                 assert isinstance(
@@ -680,18 +680,20 @@ def visualize_inference(model, inputs, results, savedir, name, cfg, energy_thres
     # breakpoint()
 
     inter_feat = results.inter_feat[0:max_boxes]
+    ood_scores = torch.logsumexp(inter_feat[:, :-1], dim=1).cpu().data.numpy()
     if energy_threshold:
         labels[(np.argwhere(
-            torch.logsumexp(inter_feat[:, :-1], dim=1).cpu().data.numpy() < energy_threshold)).reshape(-1)] = 10
+            torch.logsumexp(inter_feat[:, :-1], dim=1).cpu().data.numpy() < energy_threshold)).reshape(-1)] = 0
     # # if name == '133631':
     #     # breakpoint()
     # # breakpoint()
     if len(scores) == 0 or max(scores) <= 0.0:
         return
 
-    v_pred = v_pred.overlay_covariance_instances(
+    v_pred, reformed_boxes = v_pred.overlay_covariance_instances(
         labels=labels,
         scores=scores,
+        ood_scores=ood_scores,
         boxes=predicted_boxes[0:max_boxes], covariance_matrices=None,
         score_threshold = 0.0)
         # covariance_matrices=predicted_covar_mats[0:max_boxes])
@@ -702,6 +704,10 @@ def visualize_inference(model, inputs, results, savedir, name, cfg, energy_thres
     # cv2.savefig
     cv2.imwrite(savedir + '/' + name + '.jpg', prop_img)
     cv2.waitKey()
+
+    return reformed_boxes
+
+
 
 import datetime
 import logging
@@ -746,27 +752,32 @@ def inference_on_dataset(model, data_loader, evaluator, saved_address, visualize
     start_time = time.perf_counter()
     total_compute_time = 0
     saved_ood_source = []
+
+    custom_form_result = {} # {img_id : {"bboxes":[{"label": 1, "xtl": 1208, "ytl": 582, "xbr": 1301, "ybr": 612, "ood_score": 66.818,}]}}
     with inference_context(model), torch.no_grad():
-        # print(len(data_loader))
         for idx, inputs in enumerate(data_loader):
             if idx < 50000000:
+                if idx%10 == 0:
+                    print(f'evaluting [{idx}/{len(data_loader)}]')
                 if idx == num_warmup:
                     start_time = time.perf_counter()
                     total_compute_time = 0
-                # print(idx)
                 start_compute_time = time.perf_counter()
 
                 outputs = model(inputs)
+                outputs[0]['instances'].pred_classes = torch.tensor([1 for i in range(len(outputs[0]['instances'].pred_classes))], device='cuda:0')
+
                 # breakpoint()
                 if visualize:
                     assert len(outputs) == 1
 
-                    visualize_inference(model, inputs,
+                    reformed_boxes = visualize_inference(model, inputs,
                                   outputs[0],
                                   savedir=savefigdir,
                                   name=str(inputs[0]['image_id']),
-                                  cfg=cfg)
-                                 # energy_threshold=8.868)
+                                  cfg=cfg,
+                                energy_threshold=8.868)
+                    custom_form_result[inputs[0]['file_name'].split('/')[-1].split('.')[0]] = {"bboxes":reformed_boxes}
                 assert len(outputs) == 1
                 saved_ood_source.append(outputs[0]['instances'].inter_feat.cpu().data.numpy())
                 if torch.cuda.is_available():
@@ -807,15 +818,37 @@ def inference_on_dataset(model, data_loader, evaluator, saved_address, visualize
             total_compute_time_str, total_compute_time / (total - num_warmup), num_devices
         )
     )
-    if 'ood' not in saved_address:
-        results = evaluator.evaluate()
-        # An evaluator may return None when not in main process.
-        # Replace it by an empty dict instead to make it easier for downstream code to handle
-        if results is None:
-            results = {}
-        return results
-    else:
-        return None
+    custom_form_result['time'] = {'fps': (total - num_warmup) / total_time, 's/img':total_time / (total - num_warmup), 'total_time':total_time_str }
+
+    with open(os.path.join(cfg.OUTPUT_DIR, 'pred_results.json'), mode='w') as f:
+        json.dump(custom_form_result, f, indent='\t')
+
+    ann_path = os.path.join(cfg.OUTPUT_DIR.split('stud/runs/')[0], 'stud', 'datasets', cfg.OUTPUT_DIR.split('stud/runs/')[1], 'annotations/all.json')
+    # if not os.path.exists(ann_path):
+    #     ann_path = os.path.join(cfg.OUTPUT_DIR.split('stud/runs/')[0], 'stud', 'datasets', cfg.OUTPUT_DIR.split('stud/runs/')[1], 'yolo_preds/yolov7_preds_refined.json')
+    if os.path.exists(ann_path):
+        with open(ann_path, mode='r') as f:
+            ann = json.load(f)
+        from .custom_metrics import calc_iou_performance
+        all_performances = {}
+        if os.path.exists('runs/seaships/thresholds.json'):
+            with open('runs/seaships/thresholds.json', mode='r') as f:
+                thresholds = json.load(f)
+            for thres_key in thresholds.keys():
+                all_performances[thres_key] = calc_iou_performance(custom_form_result, ann, ood_threshold=thresholds[thres_key])
+        with open(os.path.join(cfg.OUTPUT_DIR, 'performance.json'), mode='w') as f:
+            json.dump(all_performances, f, indent='\t')
+
+
+    # if 'ood' not in saved_address:
+    #     results = evaluator.evaluate()
+    #     # An evaluator may return None when not in main process.
+    #     # Replace it by an empty dict instead to make it easier for downstream code to handle
+    #     if results is None:
+    #         results = {}
+    #     return results
+    # else:
+    return None
 
 
 @contextmanager
