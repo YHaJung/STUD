@@ -7,12 +7,16 @@ from detectron2.data import DatasetCatalog
 from .coco import register_coco_instances  # use customized data register
 
 GPU=0
-dataset_root='/home/hajung/workspace/stud/datasets'
+dataset_root='./datasets'
 
 if GPU==0:
     __all__ = [
         "register_all_bdd_tracking",
-        "register_all_waymo",
+        "register_coco_ood_wrt_bdd",
+        "register_seaships",
+        "register_MID",
+        "register_modd"
+
     ]
 
 
@@ -120,6 +124,42 @@ if GPU==0:
         #     '/nobackup-slow/dataset/my_xfdu/video/nuscene/nu_ood.json',
         #     "/nobackup-slow/dataset/my_xfdu/video/nuscene/",
         # )
+        
+    #register the seaships dataset.
+    def register_seaships(dataset_dir=dataset_root+'/seaships'):
+        metadata = {  "thing_classes": ['fishing boat', 'ore carrier', 'passenger ship', 'container ship', 'general cargo ship', 'bulk cargo carrier']}
+
+        train_json_annotations = os.path.join(
+            dataset_dir, 'labels', 'coco_form.json')
+        train_image_dir = os.path.join(dataset_dir, 'images')
+
+        register_coco_instances('seaships_train', metadata,
+                                train_json_annotations,
+                                train_image_dir)
+        
+    def register_MID(dataset_dir=dataset_root+'/MID'):
+        metadata = {"thing_classes": ['unknown', 'known']}
+
+        for num in range(0, 8):
+            video_name = str(num).zfill(2)
+            train_json_annotations = os.path.join(dataset_dir, video_name, 'annotations', 'coco_form.json')
+            train_image_dir = os.path.join(dataset_dir, video_name, 'images')
+
+            register_coco_instances(f'MID_{video_name}_test_ood', metadata,
+                                    train_json_annotations,
+                                    train_image_dir)
+            
+    def register_modd(dataset_dir=dataset_root+'/modd'):
+        metadata = {  "thing_classes": ['unknown', 'known']}
+
+        for num in range(0, 13):
+            video_name = str(num).zfill(2)
+            train_json_annotations = os.path.join(dataset_dir, video_name, 'annotations', 'coco_form.json')
+            train_image_dir = os.path.join(dataset_dir, video_name, 'images')
+
+            register_coco_instances(f'modd_{video_name}_test_ood', metadata,
+                                    train_json_annotations,
+                                    train_image_dir)
 
         # # register the coco ood dataset wrt the vis dataset.
         # metadata = {
@@ -141,8 +181,8 @@ if GPU==0:
         # register_coco_instances(
         #     'vis_coco_ood',
         #     metadata,
-        #     '/nobackup-slow/dataset/my_xfdu/coco2017/annotations/instances_val2017_ood_wrt_vis.json',
-        #     "/nobackup-slow/dataset/my_xfdu/coco2017/train2017/",
+        #     dataset_root+'/coco2017/annotations/instances_val2017_ood_wrt_vis.json',
+        #     dataset_root+'/coco2017/train2017/"
         # )
 
 
@@ -173,7 +213,7 @@ if GPU==0:
 
 
     # # ===== register vanilla coco dataset ====
-    # from detectron2.data import MetadataCatalog
+    from detectron2.data import MetadataCatalog
     # def register_all_coco(dataset_dir=f'{dataset_root}/coco2017'):
     #     thing_classes = MetadataCatalog.get('coco_2017_train').thing_classes
     #     metadata = {"thing_classes": thing_classes}
@@ -190,16 +230,16 @@ if GPU==0:
     #                             test_json_annotations,
     #                             test_image_dir)
 
-    # def register_coco_ood_wrt_bdd(dataset_dir=f'{dataset_root}/coco2017'):
-    #     thing_classes = MetadataCatalog.get('coco_2017_train').thing_classes
-    #     metadata = {"thing_classes": thing_classes}
+    def register_coco_ood_wrt_bdd(dataset_dir=dataset_root+'/coco2017'):
+        thing_classes = MetadataCatalog.get('coco_2017_train').thing_classes
+        metadata = {"thing_classes": thing_classes}
 
-    #     test_json_annotations = os.path.join(
-    #         dataset_dir, 'annotations', 'instances_val2017_ood_wrt_bdd.json')
-    #     test_image_dir = os.path.join(dataset_dir, 'val2017')
+        test_json_annotations = os.path.join(
+            dataset_dir, 'annotations', 'instances_val2017_ood_wrt_bdd.json')
+        test_image_dir = os.path.join(dataset_dir, 'val2017')
 
-    #     register_coco_instances('coco_2017_val_ood_wrt_bdd', metadata,
-    #                             test_json_annotations,
-    #                             test_image_dir)
+        register_coco_instances('coco_2017_val_ood_wrt_bdd', metadata,
+                                test_json_annotations,
+                                test_image_dir)
 
 
