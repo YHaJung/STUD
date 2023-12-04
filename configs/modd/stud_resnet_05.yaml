@@ -18,8 +18,8 @@ MODEL:
     FILTERING2: 0.6
     ENERGY_WEIGHT: 0.05
 DATASETS:
-  TRAIN: ("bdd_tracking_2k_train",)
-  TEST: ("bdd_tracking_2k_val", )
+  # TRAIN: ("modd_05_test",)
+  TEST: ("modd_05_test_ood",)
 SOLVER:
   IMS_PER_BATCH: 2
 #   IMS_PER_BATCH: 16
@@ -39,4 +39,4 @@ DATALOADER:
   SAMPLER_TRAIN: "PairTrainingMultiRandomSampler"
   PAIR_OFFSET_RANGE: 9
   SELCTED_NUMBER: 3
-OUTPUT_DIR: "./runs/bdd100k_basic"
+OUTPUT_DIR: "./runs/modd/05"
