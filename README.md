@@ -35,11 +35,9 @@ Checkout our
 
 - Install Pytorch 1.9
 
-  `conda install pytorch==1.9.0 torchvision==0.10.0 torchaudio==0.9.0 cudatoolkit=10.2 -c pytorch`
+  `conda install pytorch==1.9.1 torchvision==0.10.1 torchaudio==0.9.1 cudatoolkit=10.2 -c pytorch`
   Check out the previous Pytorch versions [here](https://pytorch.org/get-started/previous-versions/).
 - `pip install -r requirements.txt`
-- `pip install setuptools==59.5.0`
-
 
 - Install Detectron2
 Build Detectron2 from Source (gcc & g++ >= 5.4)
@@ -52,6 +50,10 @@ Or, you can install Pre-built detectron2 (example for CUDA 10.2, Pytorch 1.9)
 
 More details can be found [here](https://detectron2.readthedocs.io/en/latest/tutorials/install.html).
 
+- debug  
+If the code makes error like this `'AttributeError: module 'distutils' has no attribute 'version'`, do this
+  - `pip uninstall setuptools`
+  - `pip install setuptools==59.5.0`
 
 ## Data Preparation
 
@@ -212,3 +214,6 @@ If you found any part of this code is useful in your research, please consider c
       year={2022}
 }
 ```
+
+
+datasets/seaships/images/track/train/all/006034.jpg
